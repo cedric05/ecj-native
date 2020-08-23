@@ -3,13 +3,11 @@ FROM oracle/graalvm-ce:20.2.0-java8 as graalvm
 
 RUN gu install native-image
 
+# early version, works with java9 jmods
+RUN curl https://maven.repository.redhat.com/earlyaccess/all/org/eclipse/jdt/core/compiler/ecj/maven-metadata.xml \
+	| grep -oPm1 "(?<=<latest>)[^<]+" > ECJ_VERSION
 
-RUN curl https://repo1.maven.org/maven2/org/eclipse/jdt/core/compiler/ecj/maven-metadata.xml | \
-	grep -oPm1 "(?<=<latest>)[^<]+" > ECJ_VERSION
-
-# ARG ECJ_VERSION=4.6.1
-
-RUN curl https://repo1.maven.org/maven2/org/eclipse/jdt/core/compiler/ecj/$(cat ECJ_VERSION)/ecj-$(cat ECJ_VERSION).jar -o ecj.jar
+RUN curl https://maven.repository.redhat.com/earlyaccess/all/org/eclipse/jdt/core/compiler/ecj/$(cat ECJ_VERSION)/ecj-$(cat ECJ_VERSION).jar -o ecj.jar
 
 RUN mkdir META-INF/native-image -p
 
@@ -19,6 +17,7 @@ COPY hello.java /
 RUN java -agentlib:native-image-agent=config-output-dir=META-INF/native-image -jar ecj.jar hello.java -verbose -1.8 
 
 RUN native-image --initialize-at-build-time=org.eclipse.jdt.internal.compiler \
+	 --initialize-at-run-time=org.eclipse.jdt.internal.compiler.apt.model.ElementsImpl9 \
 	-jar ecj.jar  --no-server --no-fallback \
 	-H:ResourceConfigurationFiles=META-INF/native-image/resource-config.json \
 	-H:ReflectionConfigurationFiles=META-INF/native-image/reflect-config.json --static \
