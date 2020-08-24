@@ -21,7 +21,7 @@ RUN native-image --initialize-at-build-time=org.eclipse.jdt.internal.compiler \
 	-jar ecj.jar  --no-server --no-fallback \
 	-H:ResourceConfigurationFiles=META-INF/native-image/resource-config.json \
 	-H:ReflectionConfigurationFiles=META-INF/native-image/reflect-config.json --static \
-	-H:Name=ecj-native
+	-H:Name=ecj-native --allow-incomplete-classpath
 
 # --libc=musl can only be used with java11
 # rt.jar for compilation could only be found in java8
